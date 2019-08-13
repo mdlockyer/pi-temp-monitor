@@ -161,7 +161,7 @@ int main(int argc, char *argv[])
                          maxTemp);
 
         // Combine sub-strings and print
-        printf("|%s| CPU temperature: %.1f%lc F\r",
+        printf("|%s| CPU temperature: %.1f%lc F  \r",
                tempBar,
                formattedTemp,
                (wint_t)176);
