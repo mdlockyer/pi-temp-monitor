@@ -1,3 +1,7 @@
+<p align="center">
+ <img width="650" src="https://raw.githubusercontent.com/mdlockyer/pi-temp-monitor/master/example.jpg">
+</p>
+
 ## Overview
 
 This was created as a simple utility to watch the
