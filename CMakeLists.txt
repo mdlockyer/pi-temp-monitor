@@ -1,0 +1,4 @@
+cmake_minimum_required(VERSION 3.0)
+project(TempMonitor C)
+add_executable(TempMonitor main.c)
+target_link_libraries(TempMonitor m)
