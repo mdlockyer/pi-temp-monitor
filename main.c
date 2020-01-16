@@ -7,6 +7,8 @@
 #include <locale.h>
 #include <argp.h>
 
+// MARK: Arg parsing
+
 static struct argp_option options[] = {
     {"fahrenheit", 'f', 0, 0, "Display temperature in Fahrenheit rather than the default Celsius"},
     {"length", 'l', "LENGTH", 0, "The length of the display bar"},
@@ -52,6 +54,8 @@ static char doc[] = "A lighweight program for monitoring the CPU "
                     "temperature of the Raspberry Pi.";
 static char args_doc[] = "";
 
+static struct argp argp = { options, parse_opt, args_doc, doc };
+
 // MARK: Helper functions
 
 unsigned long int getReading(char filePath[2048])
@@ -69,11 +73,6 @@ unsigned long int getReading(char filePath[2048])
 
     unsigned long int lineVal = atoi(line);
     return lineVal;
-}
-
-float convertCtoF(float *temp)
-{
-    *temp = *temp * 1.8 + 32.0;
 }
 
 void createDisplayBar(char dest[], float current, float total, int length, float cyanThreshold,
@@ -122,8 +121,6 @@ void createDisplayBar(char dest[], float current, float total, int length, float
     }
 }
 
-static struct argp argp = { options, parse_opt, args_doc, doc };
-
 int main(int argc, char *argv[])
 {
 
@@ -141,6 +138,7 @@ int main(int argc, char *argv[])
 
     float cyanThreshold = 0.5;
     float yellowThreshold = 0.725;
+    // Set up our temp formatting values for both C and F
     float maxTemp;
     float minTemp;
     char tempUnitsChar;
@@ -162,14 +160,15 @@ int main(int argc, char *argv[])
         unsigned long int temp = getReading(arguments.filePath);
         // Format the raw temperature data into C units and cast to float.
         float formattedTemp = (float)temp / 1000.0;
+        // Convert to F if required
         if (arguments.fahrenheit) 
         {
             formattedTemp = formattedTemp * 1.8 + 32;
         }
 
+        // Construct the display bar string
         float barCurrent = formattedTemp - minTemp;
         float barTotal = maxTemp - minTemp;
-
         // Generate our display bar
         char tempBar[2048];
         createDisplayBar(tempBar,
