@@ -64,6 +64,7 @@ unsigned long int getReading(char filePath[2048])
     file = fopen(filePath, "r");
     if (file == NULL)
     {
+        printf("\033[0;31mThis system is not supported by PiTempMonitor\033[0m\n");
         exit(EXIT_FAILURE);
     }
 
