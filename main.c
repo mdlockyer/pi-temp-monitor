@@ -8,6 +8,7 @@
 #include <argp.h>
 
 static struct argp_option options[] = {
+    {"fahrenheit", 'f', 0, 0, "Display temperature in Fahrenheit rather than the default Celsius"},
     {"length", 'l', "LENGTH", 0, "The length of the display bar"},
     {"interval", 'i', "INTERVAL", 0, "The frequency(in seconds) that the display is refreshed"},
     {"file-path", 'p', "FILE", 0, "The log file from which temperature data is read"},
@@ -15,18 +16,21 @@ static struct argp_option options[] = {
 
 struct arguments
 {
+    char fahrenheit;
     int length;
     float interval;
     char *filePath;
 };
 
-static int
-parse_opt(int key, char *arg, struct argp_state *state)
+static int parse_opt(int key, char *arg, struct argp_state *state)
 {
 
     struct arguments *arguments = state->input;
     switch (key)
         {
+        case 'f':
+            arguments->fahrenheit = 1;
+            break;
         case 'l':
             arguments->length = atoi(arg);
             break;
@@ -67,11 +71,9 @@ unsigned long int getReading(char filePath[2048])
     return lineVal;
 }
 
-float formatTemperature(unsigned long int temperature)
+float convertCtoF(float *temp)
 {
-    float result;
-    result = ((float)temperature / 1000.0) * 1.8 + 32.0;
-    return result;
+    *temp = *temp * 1.8 + 32.0;
 }
 
 void createDisplayBar(char dest[], float current, float total, int length, float cyanThreshold,
@@ -129,6 +131,7 @@ int main(int argc, char *argv[])
 
     // Initialize our arguments struct and set default values
     struct arguments arguments;
+    arguments.fahrenheit = 0;
     arguments.length = 60;
     arguments.interval = 1.0;
     arguments.filePath = "/sys/class/thermal/thermal_zone0/temp";
@@ -138,13 +141,31 @@ int main(int argc, char *argv[])
 
     float cyanThreshold = 0.5;
     float yellowThreshold = 0.725;
-    float maxTemp = 185.0;
-    float minTemp = 32.0;
+    float maxTemp;
+    float minTemp;
+    char tempUnitsChar;
+    if (arguments.fahrenheit) 
+    {
+        maxTemp = 185.0;
+        minTemp = 32.0;
+        tempUnitsChar = 'F';
+    }
+    else
+    {
+        maxTemp = 85;
+        minTemp = 0;
+        tempUnitsChar = 'C';
+    }
 
     while (1)
     {
         unsigned long int temp = getReading(arguments.filePath);
-        float formattedTemp = formatTemperature(temp);
+        // Format the raw temperature data into C units and cast to float.
+        float formattedTemp = (float)temp / 1000.0;
+        if (arguments.fahrenheit) 
+        {
+            formattedTemp = formattedTemp * 1.8 + 32;
+        }
 
         float barCurrent = formattedTemp - minTemp;
         float barTotal = maxTemp - minTemp;
@@ -161,10 +182,11 @@ int main(int argc, char *argv[])
                          maxTemp);
 
         // Combine sub-strings and print
-        printf("|%s| CPU temperature: %.1f%lc F  \r",
+        printf("|%s| CPU temperature: %.1f%lc %C \r",
                tempBar,
                formattedTemp,
-               (wint_t)176);
+               (wint_t)176,
+               tempUnitsChar);
 
         // Flush stdout to file. Without this,
         // we don't get reliably timed prints
