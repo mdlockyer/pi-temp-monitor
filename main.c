@@ -141,16 +141,30 @@ int main(int argc, char *argv[])
 
     float cyanThreshold = 0.5;
     float yellowThreshold = 0.725;
-    float maxTemp = 185.0;
-    float minTemp = 32.0;
+    float maxTemp;
+    float minTemp;
+    char tempUnitsChar;
+    if (arguments.fahrenheit) 
+    {
+        maxTemp = 185.0;
+        minTemp = 32.0;
+        tempUnitsChar = 'F';
+    }
+    else
+    {
+        maxTemp = 85;
+        minTemp = 0;
+        tempUnitsChar = 'C';
+    }
 
     while (1)
     {
         unsigned long int temp = getReading(arguments.filePath);
         // Format the raw temperature data into C units and cast to float.
         float formattedTemp = (float)temp / 1000.0;
-        if (arguments.fahrenheit) {
-            convertCtoF(&formattedTemp);
+        if (arguments.fahrenheit) 
+        {
+            formattedTemp = formattedTemp * 1.8 + 32;
         }
 
         float barCurrent = formattedTemp - minTemp;
@@ -168,10 +182,11 @@ int main(int argc, char *argv[])
                          maxTemp);
 
         // Combine sub-strings and print
-        printf("|%s| CPU temperature: %.1f%lc F  \r",
+        printf("|%s| CPU temperature: %.1f%lc %C \r",
                tempBar,
                formattedTemp,
-               (wint_t)176);
+               (wint_t)176,
+               tempUnitsChar);
 
         // Flush stdout to file. Without this,
         // we don't get reliably timed prints
